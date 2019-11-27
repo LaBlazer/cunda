@@ -26,10 +26,24 @@ file(GLOB DLL_FILES
     "${CMAKE_SOURCE_DIR}/lib/opencv/build/x64/vc15/bin/*.dll"
 )
 
+file(GLOB RESOURCE_FILES
+    "${CMAKE_SOURCE_DIR}/resources/*.*"
+)
+
+message(STATUS "Resources: ${RESOURCE_FILES}")
+
 add_custom_command(
     TARGET cunda
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${DLL_FILES}
+        $<TARGET_FILE_DIR:cunda>
+)
+
+add_custom_command(
+    TARGET cunda
+    PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${RESOURCE_FILES}
         $<TARGET_FILE_DIR:cunda>
 )
