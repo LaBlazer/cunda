@@ -16,10 +16,13 @@
 // Structure definition for exchanging data between Host and Device
 struct CudaPic
 {
-	CudaPic(unsigned x, unsigned y, unsigned z = 1) {
+	CudaPic() {}
+
+	CudaPic(void * data, unsigned x, unsigned y, unsigned z = 1) {
 		m_size.x = x;
 		m_size.y = y;
 		m_size.z = z;
+		m_p_void = data;
 	}
   uint3 m_size;				// size of picture
   union {

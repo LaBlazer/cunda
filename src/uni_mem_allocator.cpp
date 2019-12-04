@@ -1,15 +1,16 @@
+
 #include "uni_mem_allocator.hpp"
 
 cv::UMatData* UniformAllocator::allocate(int dims, const int* sizes, int type,
 				   void* data0, size_t* step,
-					cv::AccessFlag /*flags*/, cv::UMatUsageFlags /*usageFlags*/) const
+				   int /*flags*/, cv::UMatUsageFlags /*usageFlags*/) const
 {
 	size_t total = CV_ELEM_SIZE(type);
 	for (int i = dims-1; i >= 0; i--)
 	{
 		if (step)
 		{
-			if (data0 && step[i] != cv::Mat::AUTO_STEP)
+			if (data0 && step[i] != CV_AUTOSTEP)
 			{
 				CV_Assert(total <= step[i]);
 				total = step[i];
@@ -46,7 +47,7 @@ cv::UMatData* UniformAllocator::allocate(int dims, const int* sizes, int type,
 	return u;
 }
 
-bool UniformAllocator::allocate(cv::UMatData* u, cv::AccessFlag /*accessFlags*/, cv::UMatUsageFlags /*usageFlags*/) const
+bool UniformAllocator::allocate(cv::UMatData* u, int /*accessFlags*/, cv::UMatUsageFlags /*usageFlags*/) const
 {
 	return (u != NULL);
 }

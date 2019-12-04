@@ -9,10 +9,10 @@ class UniformAllocator : public cv::MatAllocator {
 public:
 	cv::UMatData* allocate(int dims, const int* sizes, int type,
                        void* data0, size_t* step,
-		cv::AccessFlag /*flags*/, cv::UMatUsageFlags /*usageFlags*/) const override;
+                       int /*flags*/, cv::UMatUsageFlags /*usageFlags*/) const override;
 
-	bool allocate(cv::UMatData* u, cv::AccessFlag /*accessFlags*/, cv::UMatUsageFlags /*usageFlags*/) const override;
+    bool allocate(cv::UMatData* u, int /*accessFlags*/, cv::UMatUsageFlags /*usageFlags*/) const override;
 
-	void deallocate(cv::UMatData* u) const override;
+    void deallocate(cv::UMatData* u) const override;
 
 };

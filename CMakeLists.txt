@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -20,7 +20,7 @@ cuda_add_executable(cunda ${SRC_FILES})
 target_link_libraries(cunda ${OpenCV_LIBS})
 target_include_directories(cunda PRIVATE ${OpenCV_INCLUDE_DIRS})
 target_include_directories(cunda PRIVATE ${CUDA_INCLUDE_DIRS})
-set_target_properties(cunda PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+# set_target_properties(cunda PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 file(GLOB DLL_FILES
     "${CMAKE_SOURCE_DIR}/lib/opencv/build/x64/vc15/bin/*.dll"
