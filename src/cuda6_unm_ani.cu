@@ -16,7 +16,6 @@
 #include <cuda_runtime.h>
 #include <opencv2/opencv.hpp>
 
-#include "animation.hpp"
 #include "Snowflake.hpp"
 
 

@@ -20,7 +20,6 @@
 
 #include "uni_mem_allocator.hpp"
 #include "Snowflake.hpp"
-#include "animation.hpp"
 #include "Timer.hpp"
 
 void cu_animation(CudaPic background, std::vector<Snowflake> &snowflakes);
@@ -68,8 +67,10 @@ int main( int t_numarg, char **t_arg )
 	}
 
 	float time = 0;
+	Timer t;
 	while (cv::waitKey(10)) {
-		time += 0.1;
+		time += t.elapsed();
+		t.reset();
 		for (Snowflake &s : snowflakes) {
 			s.Y += s.speed;
 			s.X = s.originX + (int)(sin(time * s.timeScale) * s.sinScale);
