@@ -16,8 +16,8 @@
 #include <cuda_runtime.h>
 #include <opencv2/opencv.hpp>
 
-#include "pic_type.hpp"
 #include "animation.hpp"
+#include "Snowflake.hpp"
 
 
 __global__ void kernel_crop(CudaPic input, CudaPic output, int2 position)
@@ -79,6 +79,45 @@ __global__ void kernel_resize( CudaPic input, CudaPic output)
 		bgr11.z * (diff_y) * (diff_x);
 
 	output.at3(l_x, l_y) = out;
+}
+
+__global__ void kernel_animation(Snowflake snowflake, CudaPic background)
+{
+	// X,Y coordinates and check image dimensions
+	int l_y = blockDim.y * blockIdx.y + threadIdx.y;
+	int l_x = blockDim.x * blockIdx.x + threadIdx.x;
+
+	int offset_x = snowflake.X + l_x, offset_y = snowflake.Y + l_y;
+
+	if (offset_y >= background.m_size.y || l_y >= snowflake.picture.m_size.y) return;
+	if (offset_x >= background.m_size.x || l_x >= snowflake.picture.m_size.x) return;
+	if (l_y < 0) return;
+	if (l_x < 0) return;
+
+	if (snowflake.picture.at4(l_x, l_y).w == 0) return;
+	
+	// Store point into image
+	background.at3(offset_x, offset_y).x = snowflake.picture.at4(l_x, l_y).x;
+	background.at3(offset_x, offset_y).y = snowflake.picture.at4(l_x, l_y).y;
+	background.at3(offset_x, offset_y).z = snowflake.picture.at4(l_x, l_y).z;
+}
+
+void cu_animation(CudaPic background, std::vector<Snowflake> &snowflakes) {
+	cudaError_t l_cerr;
+	
+	for (const Snowflake &s : snowflakes) {
+		// Grid creation, size of grid must be equal or greater than images
+		int l_block_size = 32;
+		dim3 l_blocks((s.picture.m_size.x + l_block_size - 1) / l_block_size,
+			(s.picture.m_size.y + l_block_size - 1) / l_block_size);
+		dim3 l_threads(l_block_size, l_block_size);
+		kernel_animation<<<l_blocks, l_threads>>> (s, background);
+
+		if ((l_cerr = cudaGetLastError()) != cudaSuccess)
+			printf("CUDA Error [%d] - '%s'\n", __LINE__, cudaGetErrorString(l_cerr));
+	}
+
+	cudaDeviceSynchronize();
 }
 
 void cu_crop( CudaPic input, CudaPic output, int2 position )

@@ -19,63 +19,72 @@
 #include <opencv2/opencv.hpp>
 
 #include "uni_mem_allocator.hpp"
-#include "pic_type.hpp"
+#include "Snowflake.hpp"
 #include "animation.hpp"
 #include "Timer.hpp"
 
-void cu_crop(CudaPic input, CudaPic output, int2 position);
-void cu_resize(CudaPic input, CudaPic output);
-void cu_zoom(CudaPic input, CudaPic output, float2 center, float zoom);
+void cu_animation(CudaPic background, std::vector<Snowflake> &snowflakes);
+
+float randRangeFloat(float min, float max)
+{
+	assert(max > min);
+	float random = ((float)rand()) / (float)RAND_MAX;
+
+	float range = max - min;
+	return (random*range) + min;
+}
+
+int randRange(int min, int max) //range : [min, max)
+{
+	return min + rand() % ((max + 1) - min);
+}
 
 int main( int t_numarg, char **t_arg )
 {
+	srand(time(NULL));
 	// Uniform Memory allocator for Mat
 	UniformAllocator allocator;
 	cv::Mat::setDefaultAllocator( &allocator );
 
-	Animation l_animation;
-
-	// Output images
-	cv::Mat cropped(200, 200, CV_8UC3);
-	cv::Mat upscaled(400, 400, CV_8UC3);
-	cv::Mat zoomed(400, 400, CV_8UC3);
-
-	// Ball image
-	cv::Mat input = cv::imread("shrek.jpg", CV_LOAD_IMAGE_UNCHANGED);
+	const unsigned width = 800, height = 500;
+	
+	// Load images
+	cv::Mat input = cv::imread("snowflake.png", CV_LOAD_IMAGE_UNCHANGED);
+	cv::Mat background = cv::imread("winter.jpg", CV_LOAD_IMAGE_UNCHANGED);
 
 	// Data for CUDA
-	CudaPic cp_input(input.data, input.cols, input.rows), cp_cropped, cp_upscaled, cp_zoomed(zoomed.data, zoomed.cols, zoomed.rows);
+	CudaPic cuda_snowflake(input.data, input.cols, input.rows);
+	
 
-	cp_cropped.m_size.x = cropped.cols;
-	cp_cropped.m_size.y = cropped.rows;
-	cp_cropped.m_p_uchar3 = ( uchar3 * )cropped.data;
+	std::vector<Snowflake> snowflakes;
 
-	cp_upscaled.m_size.x = upscaled.cols;
-	cp_upscaled.m_size.y = upscaled.rows;
-	cp_upscaled.m_p_uchar3 = (uchar3 *)upscaled.data;
-
-	cp_upscaled.m_size.x = upscaled.cols;
-	cp_upscaled.m_size.y = upscaled.rows;
-	cp_upscaled.m_p_uchar3 = (uchar3 *)upscaled.data;
-
-
-	cv::imshow("Input", input);
-
-	cu_crop(cp_input, cp_cropped, { 320, 20 });
-
-	cv::imshow("Cropped", cropped);
-
-	cu_resize(cp_cropped, cp_upscaled);
-
-	cv::imshow("Upscaled", upscaled);
-
+	for (int i = 0; i < 60; i++) {
+		snowflakes.emplace_back(randRange(-input.cols, background.cols), 
+								randRange(-input.rows * 2, -input.rows),
+								randRangeFloat(0.5, 2.5), 
+								randRangeFloat(30, 40), 
+								randRange(1, 7), 
+								cuda_snowflake);
+	}
 
 	float time = 0;
 	while (cv::waitKey(10)) {
-		time += 0.03;
-		cu_zoom(cp_upscaled, cp_zoomed, { 0.5, 0.5 }, 1 + (sin(time) + 1));
+		time += 0.1;
+		for (Snowflake &s : snowflakes) {
+			s.Y += s.speed;
+			s.X = s.originX + (int)(sin(time * s.timeScale) * s.sinScale);
 
-		cv::imshow("Zoomed", zoomed);
+			if (s.Y > background.rows) {
+				s.Y = randRange(-s.picture.m_size.y * 2, -s.picture.m_size.y);
+				s.originX = randRange(0, background.cols);
+			}
+		}
+
+		cv::Mat tempBackground = background.clone();
+		CudaPic cuda_background(tempBackground.data, tempBackground.cols, tempBackground.rows);
+		cu_animation(cuda_background, snowflakes);
+
+		cv::imshow("Animation", tempBackground);
 	}
 
 	cv::waitKey( 0 );

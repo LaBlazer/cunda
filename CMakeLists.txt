@@ -42,8 +42,8 @@ add_custom_command(
 
 add_custom_command(
     TARGET cunda
-    PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${RESOURCE_FILES}
         $<TARGET_FILE_DIR:cunda>
 )
